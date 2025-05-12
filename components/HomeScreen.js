@@ -17,16 +17,22 @@ const HomeScreen = () => {
     return () => unsubscribe();
   }, []);
 
-  const fetchFromURL = async () => {
+  const fetchFromAPI = async () => {
     try {
-      const response = await fetch('https://it2.sut.ac.th/langexample/product.php');
+      const response = await fetch('https://fakestoreapi.com/products');
       const data = await response.json();
+      // Clear existing products (optional)
+      const existingProducts = await db.collection('products').get();
+      for (const doc of existingProducts.docs) {
+        await db.collection('products').doc(doc.id).delete();
+      }
+      // Add API products to Firestore
       for (const product of data) {
         await db.collection('products').add({
-          name: product.name || 'Unknown Product',
+          name: product.title || 'Unknown Product',
         });
       }
-      Alert.alert('Success', 'Products fetched and saved!');
+      Alert.alert('Success', 'Products fetched from API and saved!');
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch products: ' + error.message);
     }
@@ -55,7 +61,7 @@ const HomeScreen = () => {
         placeholder="Enter Product Name"
       />
       <CustomButton title="Add Product" onPress={addProduct} />
-      <CustomButton title="Fetch Products from URL" onPress={fetchFromURL} />
+      <CustomButton title="Fetch Products from API" onPress={fetchFromAPI} />
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}

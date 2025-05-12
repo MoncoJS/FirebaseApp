@@ -1,11 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { db, auth } from '../firebase';
 
 const ProductItem = ({ name }) => {
+  const handleAddToCart = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'You must be logged in to add items to the cart.');
+      return;
+    }
+    try {
+      await db.collection('cart').add({ name });
+      Alert.alert('Success', `${name} added to cart!`);
+    } catch (error) {
+      Alert.alert('Error', `Failed to add to cart: ${error.message}`);
+      console.log('Add to cart error:', error);
+    }
+  };
+
   return (
-    <View style={styles.productItem}>
+    <TouchableOpacity style={styles.productItem} onPress={handleAddToCart}>
       <Text style={styles.productText}>{name}</Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 
