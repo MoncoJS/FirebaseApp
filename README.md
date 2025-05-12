@@ -14,3 +14,8 @@ service cloud.firestore {
     }
   }
 }
+
+---
+
+expo init FirebaseApp
+npx expo start
