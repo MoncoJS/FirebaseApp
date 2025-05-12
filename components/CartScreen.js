@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import CustomButton from './CustomButton';
 import { db, auth, firebase } from '../firebase';
 
 const CartScreen = () => {
   const [cartItems, setCartItems] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth.currentUser) {
-      console.log('No user logged in for cart');
-      setCartItems([]);
-      return;
-    }
-    const unsubscribe = db.collection('cart').onSnapshot(
+    // Listen for auth state changes
+    const unsubscribeAuth = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+      if (!currentUser) {
+        console.log('No user logged in for cart');
+        setCartItems([]);
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!user || loading) return; // Wait for user authentication and loading to complete
+
+    const unsubscribeSnapshot = db.collection('cart').onSnapshot(
       (snapshot) => {
         const cartData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setCartItems(cartData);
@@ -22,11 +35,12 @@ const CartScreen = () => {
         Alert.alert('Error', `Failed to load cart: ${error.message}`);
       }
     );
-    return () => unsubscribe();
-  }, []);
+
+    return () => unsubscribeSnapshot();
+  }, [user, loading]);
 
   const handleDeleteItem = async (itemId, itemTitle) => {
-    if (!auth.currentUser) {
+    if (!user) {
       Alert.alert('Error', 'You must be logged in to delete items from the cart.');
       return;
     }
@@ -40,7 +54,7 @@ const CartScreen = () => {
   };
 
   const handleOrder = async () => {
-    if (!auth.currentUser) {
+    if (!user) {
       Alert.alert('Error', 'You must be logged in to place an order.');
       return;
     }
@@ -50,7 +64,7 @@ const CartScreen = () => {
     }
     try {
       await db.collection('orders').add({
-        userId: auth.currentUser.uid,
+        userId: user.uid,
         items: cartItems,
         total: cartItems.reduce((sum, item) => sum + (item.price || 0), 0),
       });
@@ -66,6 +80,14 @@ const CartScreen = () => {
       console.log('Order error:', error);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -107,6 +129,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 28,

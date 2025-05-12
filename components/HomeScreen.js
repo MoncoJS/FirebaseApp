@@ -1,19 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator } from 'react-native';
 import CustomButton from './CustomButton';
 import ProductItem from './ProductItem';
 import { db, auth } from '../firebase';
 
 const HomeScreen = () => {
   const [products, setProducts] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth.currentUser) {
-      console.log('No user logged in for products');
-      setProducts([]);
-      return;
-    }
-    const unsubscribe = db.collection('products').onSnapshot(
+    // Listen for auth state changes
+    const unsubscribeAuth = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+      if (!currentUser) {
+        console.log('No user logged in for products');
+        setProducts([]);
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!user || loading) return; // Wait for user authentication and loading to complete
+
+    const unsubscribeSnapshot = db.collection('products').onSnapshot(
       (snapshot) => {
         const productsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setProducts(productsData);
@@ -23,11 +36,12 @@ const HomeScreen = () => {
         Alert.alert('Error', `Failed to load products: ${error.message}`);
       }
     );
-    return () => unsubscribe();
-  }, []);
+
+    return () => unsubscribeSnapshot();
+  }, [user, loading]);
 
   const fetchFromAPI = async () => {
-    if (!auth.currentUser) {
+    if (!user) {
       Alert.alert('Error', 'You must be logged in to fetch products.');
       return;
     }
@@ -59,6 +73,14 @@ const HomeScreen = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Home - Products</Text>
@@ -87,6 +109,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 28,
@@ -103,4 +126,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default HomeScreen;  

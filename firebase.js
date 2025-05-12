@@ -1,6 +1,7 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
+import 'firebase/compat/storage';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -21,7 +22,8 @@ if (!firebase.apps.length) {
   console.log('Firebase already initialized, apps:', firebase.apps.length);
 }
 
-// Export the auth, db, and firebase instances
+// Export the auth, db, storage, and firebase instances
 export const auth = firebase.auth();
 export const db = firebase.firestore();
+export const storage = firebase.storage();
 export { firebase };
