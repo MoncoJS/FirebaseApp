@@ -2,7 +2,7 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 
-// Your web app's Firebase configuration
+// Your Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDM3Xa_VcOyT7FxAGrYgeqg1oEEObeokc4",
   authDomain: "gita-2177f.firebaseapp.com",
@@ -13,13 +13,15 @@ const firebaseConfig = {
   measurementId: "G-R3DCZML1S5"
 };
 
-// Initialize Firebase
+// Initialize Firebase if not already initialized
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully');
+} else {
+  console.log('Firebase already initialized');
 }
 
-// Export auth and db
+// Export the auth, db, and firebase instances
 export const auth = firebase.auth();
 export const db = firebase.firestore();
-
-export default firebase;
+export { firebase };
