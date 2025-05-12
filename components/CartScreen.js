@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity, Image } from 'react-native';
 import CustomButton from './CustomButton';
-import { db, auth } from '../firebase';
-import { FieldValue } from 'firebase/compat/firestore';
+import { db, auth, firebase } from '../firebase';
 
 const CartScreen = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -54,7 +53,6 @@ const CartScreen = () => {
         userId: auth.currentUser.uid,
         items: cartItems,
         total: cartItems.reduce((sum, item) => sum + (item.price || 0), 0),
-        timestamp: FieldValue.serverTimestamp(),
       });
       const batch = db.batch();
       cartItems.forEach((item) => {

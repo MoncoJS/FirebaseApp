@@ -18,7 +18,7 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
   console.log('Firebase initialized successfully');
 } else {
-  console.log('Firebase already initialized');
+  console.log('Firebase already initialized, apps:', firebase.apps.length);
 }
 
 // Export the auth, db, and firebase instances
